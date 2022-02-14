@@ -14,15 +14,16 @@ void main() {
   RemoteAuthentication sut;
   HttpClientSpy httpClient;
   String url;
+  AuthenticationParams params;
 
   setUp(() {
     //Arrange
     httpClient = HttpClientSpy();
     url = faker.internet.httpUrl();
     sut = RemoteAuthentication(httpClient: httpClient, url: url);
+    params = AuthenticationParams(email: faker.internet.email(), secret: faker.internet.password());
   });
   test('Should call http client with correct values', () async {
-    final params = AuthenticationParams(email: faker.internet.email(), secret: faker.internet.password());
     //Action
     await sut.auth(params);
 
@@ -37,13 +38,38 @@ void main() {
   });
 
   test('Should throw UnexpectedError if HttpClient returns 400', () async {
-    final params = AuthenticationParams(email: faker.internet.email(), secret: faker.internet.password());
-
     when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
         .thenThrow(HttpError.badRequest);
 
     final future = sut.auth(params);
 
     expect(future, throwsA(DomainError.unexpected));
+  });
+
+  test('Should throw UnexpectedError if HttpClient returns 404', () async {
+    when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
+        .thenThrow(HttpError.notFound);
+
+    final future = sut.auth(params);
+
+    expect(future, throwsA(DomainError.unexpected));
+  });
+
+  test('Should throw UnexpectedError if HttpClient returns 500', () async {
+    when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
+        .thenThrow(HttpError.serverError);
+
+    final future = sut.auth(params);
+
+    expect(future, throwsA(DomainError.unexpected));
+  });
+
+  test('Should throw invalidCredentialsError if HttpClient returns 401', () async {
+    when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
+        .thenThrow(HttpError.unauthorized);
+
+    final future = sut.auth(params);
+
+    expect(future, throwsA(DomainError.invalidCredentials));
   });
 }
