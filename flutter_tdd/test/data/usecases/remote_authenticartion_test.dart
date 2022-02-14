@@ -1,4 +1,5 @@
 import 'package:faker/faker.dart';
+import 'package:flutter_tdd/domain/helpers/domain_error.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
@@ -33,5 +34,16 @@ void main() {
         body: RemoteAuthenticationParams.fromDomain(params).toJson(),
       ),
     );
+  });
+
+  test('Should throw UnexpectedError if HttpClient returns 400', () async {
+    final params = AuthenticationParams(email: faker.internet.email(), secret: faker.internet.password());
+
+    when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
+        .thenThrow(HttpError.badRequest);
+
+    final future = sut.auth(params);
+
+    expect(future, throwsA(DomainError.unexpected));
   });
 }
