@@ -26,7 +26,7 @@ void main() {
   });
   test('Should call http client with correct values', () async {
     when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
-        .thenAnswer((_) async => {'accesToken': faker.guid.guid(), 'name': faker.person.name()});
+        .thenAnswer((_) async => {'accessToken': faker.guid.guid(), 'name': faker.person.name()});
 
     //Action
     await sut.auth(params);
@@ -80,10 +80,18 @@ void main() {
   test('Should return and account if HttpClient returns 200', () async {
     final accesToken = faker.guid.guid();
     when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
-        .thenAnswer((_) async => {'accesToken': accesToken, 'name': faker.person.name()});
+        .thenAnswer((_) async => {'accessToken': accesToken, 'name': faker.person.name()});
 
     final account = await sut.auth(params);
 
     expect(account.token, accesToken);
+  });
+  test('Should throw error if HttpClient returns 200 with invalid data', () async {
+    when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
+        .thenAnswer((_) async => {'invalid_kye': 'invalid_value'});
+
+    final future = sut.auth(params);
+
+    expect(future, throwsA(DomainError.unexpected));
   });
 }
