@@ -1,4 +1,5 @@
 import 'package:faker/faker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_tdd/domain/helpers/domain_error.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -24,6 +25,9 @@ void main() {
     params = AuthenticationParams(email: faker.internet.email(), secret: faker.internet.password());
   });
   test('Should call http client with correct values', () async {
+    when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
+        .thenAnswer((_) async => {'accesToken': faker.guid.guid(), 'name': faker.person.name()});
+
     //Action
     await sut.auth(params);
 
@@ -71,5 +75,15 @@ void main() {
     final future = sut.auth(params);
 
     expect(future, throwsA(DomainError.invalidCredentials));
+  });
+
+  test('Should return and account if HttpClient returns 200', () async {
+    final accesToken = faker.guid.guid();
+    when(httpClient.request(url: anyNamed('url'), method: anyNamed('method'), body: anyNamed('body')))
+        .thenAnswer((_) async => {'accesToken': accesToken, 'name': faker.person.name()});
+
+    final account = await sut.auth(params);
+
+    expect(account.token, accesToken);
   });
 }
