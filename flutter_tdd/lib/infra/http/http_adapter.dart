@@ -20,6 +20,16 @@ class HttpAdapter implements HttpClient {
     };
     final jsonBody = body != null ? jsonEncode(body) : null;
     final response = await client.post(url, headers: headers, body: jsonBody);
-    return response.body.isEmpty || response.statusCode != 200 ? null : jsonDecode(response.body);
+    return _handleResponse(response);
+  }
+
+  Map _handleResponse(Response response) {
+    if (response.statusCode == 200) {
+      return response.body.isEmpty ? null : jsonDecode(response.body);
+    } else if (response.statusCode == 204) {
+      return null;
+    } else {
+      throw HttpError.badRequest;
+    }
   }
 }

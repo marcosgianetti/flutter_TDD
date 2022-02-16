@@ -1,4 +1,5 @@
 import 'package:faker/faker.dart';
+import 'package:flutter_tdd/data/http/http.dart';
 import 'package:flutter_tdd/infra/http/http_adapter.dart';
 import 'package:http/http.dart';
 import 'package:mockito/mockito.dart';
@@ -72,6 +73,12 @@ void main() {
       mockResposnse(204);
       final response = await sut.request(url: url, method: 'post');
       expect(response, null);
+    });
+
+    test('Should return BadRequestError if post returns 400', () async {
+      mockResposnse(400);
+      final future = sut.request(url: url, method: 'post');
+      expect(future, throwsA(HttpError.badRequest));
     });
   });
 }
