@@ -2,18 +2,19 @@ import 'dart:convert';
 
 import 'package:faker/faker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_tdd/data/http/http.dart';
 import 'package:http/http.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 class ClientSpy extends Mock implements Client {}
 
-class HttpAdapter {
+class HttpAdapter implements HttpClient {
   final Client client;
 
   HttpAdapter({this.client});
 
-  Future<void> request({
+  Future<Map> request({
     @required String url,
     @required String method,
     Map body,
@@ -23,7 +24,8 @@ class HttpAdapter {
       'accept': 'application/json',
     };
     final jsonBody = body != null ? jsonEncode(body) : null;
-    client.post(url, headers: headers, body: jsonBody);
+    final response = await client.post(url, headers: headers, body: jsonBody);
+    return response.body.isEmpty || response.statusCode != 200 ? null : jsonDecode(response.body);
   }
 }
 
@@ -39,16 +41,28 @@ void main() {
   });
 
   group('post', () {
-    test('Should call post with correct values', () async {
+    PostExpectation mockRequest() => when(client.post(any, body: anyNamed('body'), headers: anyNamed('headers')));
+
+    void mockResposnse(int statusCode, {String body = '{"any_key":"any_value"}'}) {
+      mockRequest().thenAnswer((_) async => Response(body, statusCode));
+    }
+
+    setUp(() {
+      mockResposnse(200);
+    });
+
+    test('Should call post with correct values and body', () async {
       await sut.request(url: url, method: 'post', body: {'any_key': 'any_value'});
 
       verify(
-        client.post(url,
-            headers: {
-              'content-type': 'application/json',
-              'accept': 'application/json',
-            },
-            body: '{"any_key":"any_value"}'),
+        client.post(
+          url,
+          headers: {
+            'content-type': 'application/json',
+            'accept': 'application/json',
+          },
+          body: '{"any_key":"any_value"}',
+        ),
       );
     });
 
@@ -58,6 +72,29 @@ void main() {
       verify(
         client.post(any, headers: anyNamed('headers')),
       );
+    });
+
+    test('Should return data if post returns 200', () async {
+      final response = await sut.request(url: url, method: 'post');
+      expect(response, {"any_key": "any_value"});
+    });
+
+    test('Should return null if post returns 200 without body', () async {
+      mockResposnse(200, body: '');
+      final response = await sut.request(url: url, method: 'post');
+      expect(response, null);
+    });
+
+    test('Should return null if post returns 204', () async {
+      mockResposnse(204, body: '');
+      final response = await sut.request(url: url, method: 'post');
+      expect(response, null);
+    });
+
+    test('Should return null if post returns 204 with data', () async {
+      mockResposnse(204);
+      final response = await sut.request(url: url, method: 'post');
+      expect(response, null);
     });
   });
 }
