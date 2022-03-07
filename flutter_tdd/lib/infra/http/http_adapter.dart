@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_tdd/data/http/http.dart';
 import 'package:http/http.dart';
 
+import '../../data/http/http_error.dart';
+import '../../data/http/http_error.dart';
+
 class HttpAdapter implements HttpClient {
   final Client client;
 
@@ -28,6 +31,16 @@ class HttpAdapter implements HttpClient {
       return response.body.isEmpty ? null : jsonDecode(response.body);
     } else if (response.statusCode == 204) {
       return null;
+    } else if (response.statusCode == 500) {
+      throw HttpError.serverError;
+    } else if (response.statusCode == 400) {
+      throw HttpError.badRequest;
+    } else if (response.statusCode == 401) {
+      throw HttpError.unauthorized;
+    } else if (response.statusCode == 403) {
+      throw HttpError.forbiddon;
+    } else if (response.statusCode == 404) {
+      throw HttpError.notFound;
     } else {
       throw HttpError.badRequest;
     }

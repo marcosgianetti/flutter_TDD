@@ -75,10 +75,36 @@ void main() {
       expect(response, null);
     });
 
-    test('Should return BadRequestError if post returns 400', () async {
+    test('Should return BadRequestError if post returns 400, without body', () async {
       mockResposnse(400);
       final future = sut.request(url: url, method: 'post');
       expect(future, throwsA(HttpError.badRequest));
+    });
+
+    test('Should return BadRequestError if post returns 400, with body', () async {
+      mockResposnse(400, body: '');
+      final future = sut.request(url: url, method: 'post');
+      expect(future, throwsA(HttpError.badRequest));
+    });
+    test('Should return Server if post returns 500, with body', () async {
+      mockResposnse(500);
+      final future = sut.request(url: url, method: 'post');
+      expect(future, throwsA(HttpError.serverError));
+    });
+    test('Should return Server if post returns 401', () async {
+      mockResposnse(401);
+      final future = sut.request(url: url, method: 'post');
+      expect(future, throwsA(HttpError.unauthorized));
+    });
+    test('Should return Server if post returns 404', () async {
+      mockResposnse(404);
+      final future = sut.request(url: url, method: 'post');
+      expect(future, throwsA(HttpError.notFound));
+    });
+    test('Should return Server if post returns 403, with body', () async {
+      mockResposnse(403);
+      final future = sut.request(url: url, method: 'post');
+      expect(future, throwsA(HttpError.forbiddon));
     });
   });
 }
