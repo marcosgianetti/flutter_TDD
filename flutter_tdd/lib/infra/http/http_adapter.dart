@@ -22,7 +22,14 @@ class HttpAdapter implements HttpClient {
       'accept': 'application/json',
     };
     final jsonBody = body != null ? jsonEncode(body) : null;
-    final response = await client.post(url, headers: headers, body: jsonBody);
+    var response = Response('', 500);
+    try {
+      if (method == 'post') {
+        response = await client.post(url, headers: headers, body: jsonBody);
+      }
+    } catch (error) {
+      throw HttpError.serverError;
+    }
     return _handleResponse(response);
   }
 
@@ -31,8 +38,6 @@ class HttpAdapter implements HttpClient {
       return response.body.isEmpty ? null : jsonDecode(response.body);
     } else if (response.statusCode == 204) {
       return null;
-    } else if (response.statusCode == 500) {
-      throw HttpError.serverError;
     } else if (response.statusCode == 400) {
       throw HttpError.badRequest;
     } else if (response.statusCode == 401) {
@@ -41,8 +46,10 @@ class HttpAdapter implements HttpClient {
       throw HttpError.forbiddon;
     } else if (response.statusCode == 404) {
       throw HttpError.notFound;
+    } else if (response.statusCode == 500) {
+      throw HttpError.serverError;
     } else {
-      throw HttpError.badRequest;
+      throw HttpError.serverError;
     }
   }
 }

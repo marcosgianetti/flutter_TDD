@@ -18,11 +18,23 @@ void main() {
     url = faker.internet.httpUrl();
   });
 
+  group('shared', () {
+    test('Should throw server serro if invalid method is provided', () async {
+      final future = sut.request(url: url, method: 'invalid_method');
+
+      expect(future, throwsA(HttpError.serverError));
+    });
+  });
+
   group('post', () {
     PostExpectation mockRequest() => when(client.post(any, body: anyNamed('body'), headers: anyNamed('headers')));
 
     void mockResposnse(int statusCode, {String body = '{"any_key":"any_value"}'}) {
       mockRequest().thenAnswer((_) async => Response(body, statusCode));
+    }
+
+    void mockError() {
+      mockRequest().thenThrow(Exception());
     }
 
     setUp(() {
@@ -105,6 +117,12 @@ void main() {
       mockResposnse(403);
       final future = sut.request(url: url, method: 'post');
       expect(future, throwsA(HttpError.forbiddon));
+    });
+
+    test('Should return Server if post throws', () async {
+      mockError();
+      final future = sut.request(url: url, method: 'post');
+      expect(future, throwsA(HttpError.serverError));
     });
   });
 }
