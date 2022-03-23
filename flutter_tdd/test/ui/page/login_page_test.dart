@@ -13,7 +13,9 @@ void main() {
   LoginPresenter presenter;
   StreamController<String> emailErrorController;
   StreamController<String> passwordErrorController;
+  StreamController<String> mainErrorController;
   StreamController<bool> isFormVaidController;
+  StreamController<bool> isLoadingController;
 
   Future<void> loadPage(WidgetTester tester) async {
     presenter = LoginPresenterSpy();
@@ -21,12 +23,16 @@ void main() {
     emailErrorController = StreamController<String>();
     passwordErrorController = StreamController<String>();
     isFormVaidController = StreamController<bool>();
+    isLoadingController = StreamController<bool>();
+    mainErrorController = StreamController<String>();
 
     when(presenter.emailErrorStrem).thenAnswer((_) => emailErrorController.stream);
     when(presenter.passwordErrorStream).thenAnswer((_) => passwordErrorController.stream);
     when(presenter.isFormVaidStream).thenAnswer((_) => isFormVaidController.stream);
+    when(presenter.isLoadingStream).thenAnswer((_) => isLoadingController.stream);
+    when(presenter.mainErrorStream).thenAnswer((_) => mainErrorController.stream);
 
-    final loginPage = MaterialApp(home: LoginPage(presenter: presenter));
+    final loginPage = MaterialApp(home: LoginPage(presenter));
     await tester.pumpWidget(loginPage);
   }
 
@@ -34,6 +40,8 @@ void main() {
     emailErrorController.close();
     passwordErrorController.close();
     isFormVaidController.close();
+    isLoadingController.close();
+    mainErrorController.close();
   });
 
   testWidgets('Should load with correct initial state', (WidgetTester tester) async {
@@ -43,15 +51,13 @@ void main() {
     final emailTextChildren = find.descendant(of: find.bySemanticsLabel('Email'), matching: find.byType(Text));
     expect(emailTextChildren, findsOneWidget);
 
-    final passwordPage = MaterialApp(home: LoginPage(presenter: presenter));
-    await tester.pumpWidget(passwordPage);
-
     /// If textFormField has only one string label, means has no one error mensagem on screen
     final passwordTextChildren = find.descendant(of: find.bySemanticsLabel('Senha'), matching: find.byType(Text));
     expect(passwordTextChildren, findsOneWidget);
 
     final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
     expect(button.onPressed, null);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
   testWidgets('Should call validade with corect values', (WidgetTester tester) async {
     await loadPage(tester);
@@ -121,5 +127,52 @@ void main() {
 
     final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
     expect(button.onPressed, null);
+  });
+  testWidgets('Should call authentication on form submit', (WidgetTester tester) async {
+    await loadPage(tester);
+
+    isFormVaidController.add(true);
+    await tester.pump();
+    await tester.tap(find.byType(ElevatedButton));
+
+    verify(presenter.auth()).called(1);
+  });
+
+  testWidgets('Should present load', (WidgetTester tester) async {
+    await loadPage(tester);
+
+    isLoadingController.add(true);
+    await tester.pump();
+    //await tester.tap(find.byType(ElevatedButton));
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('Should hide load', (WidgetTester tester) async {
+    await loadPage(tester);
+
+    isLoadingController.add(true);
+    await tester.pump();
+    isLoadingController.add(false);
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('Should presente error mensage if authentication fails', (WidgetTester tester) async {
+    await loadPage(tester);
+
+    mainErrorController.add('main error');
+    await tester.pump();
+
+    expect(find.text('main error'), findsOneWidget);
+  });
+
+  testWidgets('Should close streams on dispose', (WidgetTester tester) async {
+    await loadPage(tester);
+
+    addTearDown(() {
+      verify(presenter.dispose()).called(1);
+    });
   });
 }
