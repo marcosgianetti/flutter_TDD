@@ -23,30 +23,44 @@ class LoginPage extends StatelessWidget {
                   child: Column(
                 children: [
                   StreamBuilder<String>(
-                      stream: presenter.emailErrorStrem,
-                      builder: (context, snapshot) {
-                        return TextFormField(
+                    stream: presenter.emailErrorStrem,
+                    builder: (context, snapshot) {
+                      return TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          icon: Icon(Icons.email, color: Theme.of(context).primaryColorLight),
+                          errorText: snapshot.data?.isEmpty == true ? null : snapshot.data,
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: presenter.validateEmail,
+                      );
+                    },
+                  ),
+                  StreamBuilder<String>(
+                    stream: presenter.passwordErrorStream,
+                    builder: (context, snapshot) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 32),
+                        child: TextFormField(
                           decoration: InputDecoration(
-                            labelText: 'Email',
-                            icon: Icon(Icons.email, color: Theme.of(context).primaryColorLight),
-                            errorText: snapshot.data,
+                            labelText: 'Senha',
+                            icon: Icon(Icons.lock, color: Theme.of(context).primaryColorLight),
+                            errorText: snapshot.data?.isEmpty == true ? null : snapshot.data,
                           ),
-                          keyboardType: TextInputType.emailAddress,
-                          onChanged: presenter.validateEmail,
+                          obscureText: true,
+                          onChanged: presenter.validatePassword,
+                        ),
+                      );
+                    },
+                  ),
+                  StreamBuilder<bool>(
+                      stream: presenter.isFormVaidStream,
+                      builder: (context, snapshot) {
+                        return ElevatedButton(
+                          onPressed: snapshot.data == true ? () {} : null,
+                          child: Text('Entrar'.toUpperCase()),
                         );
                       }),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 32),
-                    child: TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Senha',
-                        icon: Icon(Icons.lock, color: Theme.of(context).primaryColorLight),
-                      ),
-                      obscureText: true,
-                      onChanged: presenter.validatePassword,
-                    ),
-                  ),
-                  ElevatedButton(onPressed: null, child: Text('Entrar'.toUpperCase())),
                   FlatButton.icon(
                     onPressed: () {},
                     icon: Icon(Icons.person),
