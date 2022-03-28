@@ -17,31 +17,42 @@ void main() {
   StreamController<bool> isFormVaidController;
   StreamController<bool> isLoadingController;
 
-  Future<void> loadPage(WidgetTester tester) async {
-    presenter = LoginPresenterSpy();
-
+  void initStreams() {
     emailErrorController = StreamController<String>();
     passwordErrorController = StreamController<String>();
     isFormVaidController = StreamController<bool>();
     isLoadingController = StreamController<bool>();
     mainErrorController = StreamController<String>();
+  }
 
+  void mockStreams() {
     when(presenter.emailErrorStrem).thenAnswer((_) => emailErrorController.stream);
     when(presenter.passwordErrorStream).thenAnswer((_) => passwordErrorController.stream);
     when(presenter.isFormVaidStream).thenAnswer((_) => isFormVaidController.stream);
     when(presenter.isLoadingStream).thenAnswer((_) => isLoadingController.stream);
     when(presenter.mainErrorStream).thenAnswer((_) => mainErrorController.stream);
+  }
+
+  void closeStreams() {
+    emailErrorController.close();
+    passwordErrorController.close();
+    isFormVaidController.close();
+    isLoadingController.close();
+    mainErrorController.close();
+  }
+
+  Future<void> loadPage(WidgetTester tester) async {
+    presenter = LoginPresenterSpy();
+
+    initStreams();
+    mockStreams();
 
     final loginPage = MaterialApp(home: LoginPage(presenter));
     await tester.pumpWidget(loginPage);
   }
 
   tearDown(() {
-    emailErrorController.close();
-    passwordErrorController.close();
-    isFormVaidController.close();
-    isLoadingController.close();
-    mainErrorController.close();
+    closeStreams();
   });
 
   testWidgets('Should load with correct initial state', (WidgetTester tester) async {
@@ -56,8 +67,9 @@ void main() {
     expect(passwordTextChildren, findsOneWidget);
 
     final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
-    expect(button.onPressed, null);
     expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    expect(button.onPressed, null);
   });
   testWidgets('Should call validade with corect values', (WidgetTester tester) async {
     await loadPage(tester);
