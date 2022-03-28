@@ -46,7 +46,7 @@ void main() {
 
       verify(
         client.post(
-          url,
+          Uri.parse(url),
           headers: {
             'content-type': 'application/json',
             'accept': 'application/json',

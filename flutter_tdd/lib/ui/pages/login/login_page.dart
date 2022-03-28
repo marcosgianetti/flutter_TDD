@@ -30,18 +30,20 @@ class _LoginPageState extends State<LoginPage> {
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  child: SimpleDialog(
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 10),
-                          Text('Aguarde...', textAlign: TextAlign.center),
-                        ],
-                      )
-                    ],
-                  ),
+                  builder: (BuildContext context) {
+                    return SimpleDialog(
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 10),
+                            Text('Aguarde...', textAlign: TextAlign.center),
+                          ],
+                        )
+                      ],
+                    );
+                  },
                 );
               } else {
                 if (Navigator.canPop(context)) {
