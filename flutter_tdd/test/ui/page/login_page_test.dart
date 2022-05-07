@@ -155,7 +155,6 @@ void main() {
 
     isLoadingController.add(true);
     await tester.pump();
-    //await tester.tap(find.byType(ElevatedButton));
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
