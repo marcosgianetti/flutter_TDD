@@ -5,7 +5,6 @@ import 'package:flutter_tdd/data/http/http.dart';
 import 'package:http/http.dart';
 
 import '../../data/http/http_error.dart';
-import '../../data/http/http_error.dart';
 
 class HttpAdapter implements HttpClient {
   final Client client;
